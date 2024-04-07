@@ -82,7 +82,9 @@ while True:
     for operation in OperationsOrder:
         i = 0
         while i < len(NumsAndOperations):
-            if NumsAndOperations[i] == operation:
+            if NumsAndOperations[i] == "exit":
+                exit(0)
+            elif NumsAndOperations[i] == operation:
                 if operation in ["sqrt", "tg", "ctg", "sin", "cos"]:
                     calc1.operation(operation, float(NumsAndOperations[i + 1]))
                     NumsAndOperations[i] = calc1.result
