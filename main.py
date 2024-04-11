@@ -1,109 +1,225 @@
 import math
 
 class Calculator:
+    
+    def tokeniser(self, expression): # "2+3-5"
+        minusflag = 1
+        expression.replace(" ", "")
+        expression += ' '
+        tokenlist = []
+        token = ''
+        chr = 0
+        while chr < len(expression):
+            if expression[chr] in ' ,':
+                 chr += 1
+            elif expression[chr] == '-' and minusflag == 1:
+                token += expression[chr]
+                while expression[chr + 1] in "0123456789.":
+                    token += expression[chr + 1]
+                    chr += 1
+                tokenlist.append(token)
+                token = ''
+                chr += 1
+                minusflag = 0
+            elif expression[chr] == '(':
+                token = '('
+                tokenlist.append(token)
+                chr += 1
+                minusflag = 1
+                token = ''
+            elif expression[chr] == ')':
+                token = ')'
+                tokenlist.append(token)
+                chr += 1
+                minusflag = 0
+                token = ''
+            elif expression[chr] in "0123456789.":
+                token += expression[chr]
+                while expression[chr + 1] in "0123456789.":
+                    token += expression[chr + 1]
+                    chr += 1
+                tokenlist.append(token)
+                token = ''
+                chr += 1
+                minusflag = 0
+            elif expression[chr] in "sctelm":
+                token = expression[chr] + expression[chr + 1] + expression[chr + 2] + ('t' if expression[chr + 3] == 't' else '')
+                tokenlist.append(token)
+                token = ''
+                chr += 3 + (1 if expression[chr + 3] == 't' else 0)
+                minusflag = 0
+            else:
+                token = expression[chr]
+                tokenlist.append(token)
+                token = ''
+                chr += 1
+                minusflag = 0
+        return tokenlist
+    
+    def calculate(self, expression):
+        operationRang = {
+            '(' : 0,
+            '+' : 1,
+            '-' : 1,
+            '*' : 2,
+            '/' : 2,
+            '^' : 3,
+            'sqrt' : 3,
+            'sin' : 4,
+            'cos' : 4,
+            'tan' : 4,
+            'ctg' : 4,
+            'exp' : 5,
+            '!' : 6,
+            'log' : 7, #log(base, x)
+            'mod' : 8,
+        }
+
+        tokenlist = self.tokeniser(expression)
+        stack_d = []
+        stack_c = []
+        for token in tokenlist:
+            try:
+                stack_d.append(float(token))
+            except ValueError:
+                if token == '(':
+                    stack_c.append(token)
+                elif token == ')':
+                    while stack_c[-1] != '(':
+                        if stack_c[-1] in ['+','-','*','/','^',"log", "mod"]:
+                            temp = self.operation(stack_c[-1], stack_d[-2], stack_d[-1])
+                            stack_d.pop()
+                            stack_d.pop()
+                            stack_d.append(temp)
+                            stack_c.pop()
+                        else:
+                            temp = self.operation(stack_c[-1], stack_d[-1])
+                            stack_d.pop()
+                            stack_d.append(temp)
+                            stack_c.pop()
+                    stack_c.pop()
+                            
+                elif len(stack_c) == 0:
+                    stack_c.append(token)
+                elif operationRang[token] <= operationRang[stack_c[-1]]:
+                    while len(stack_c) != 0 and operationRang[token] < operationRang[stack_c[-1]]:
+                        if stack_c[-1] in ['+','-','*','/','^',"log", "mod"]:
+                            temp = self.operation(stack_c[-1], stack_d[-2], stack_d[-1])
+                            stack_d.pop()
+                            stack_d.pop()
+                            stack_d.append(temp)
+                            stack_c.pop()
+                        elif stack_c[-1] in ["cos", "sin", "tan", "ctg", '!', 'sqrt', 'exp']:
+                            temp = self.operation(stack_c[-1], stack_d[-1])
+                            stack_d.pop()
+                            stack_d.append(temp)
+                            stack_c.pop()
+                    stack_c.append(token)
+                else:
+                    stack_c.append(token)
+            
+        while len(stack_c) > 0:
+            if stack_c[-1] in ['+','-','*','/','^',"log", "mod"]:
+                temp = self.operation(stack_c[-1], stack_d[-2], stack_d[-1])
+                stack_d.pop()
+                stack_d.pop()
+                stack_d.append(temp)
+                stack_c.pop()
+            elif stack_c[-1] in ["cos", "sin", "tan", "ctg", '!', 'sqrt', 'exp']:
+                temp = self.operation(stack_c[-1], stack_d[-1])
+                stack_d.pop()
+                stack_d.append(temp)
+                stack_c.pop()
+
+        if len(stack_d) == 1:
+            print(round(stack_d[0]*10000)/10000)
+        
+
+        
+    
     def __init__(self):
         self.result = 0
 
     def add(self, x, y):
-        self.result = x + y
+        return x + y
 
     def subtract(self, x, y):
-        self.result = x - y
+        return x - y
 
     def multiply(self, x, y):
-        self.result = x * y
+        return x * y
 
     def divide(self, x, y):
         try:
-            self.result = x / y
+            return x / y
         except ZeroDivisionError:
-            raise ZeroDivisionError("Ошибка деления на ноль")
+            return "Ошибка деления на ноль"
 
     def power(self, x, y):
-        self.result = x ** y
+        return x ** y
 
     def sqrt(self, x):
-        self.result = x ** .5
+        return x ** .5
 
     def factorial(self, x):
-        try:
-            self.result = math.factorial(x)
-        except ValueError:
+        if int(x) == x and x > 0:
+            return math.factorial(int(x))
+        else:
             raise ValueError("Факториал определен только для целых положительных чисел")
 
-    def sin(self, x):
-        self.result = math.sin(x * math.pi / 180)
+    def Sin(self, x):
+        return round(math.sin(x * math.pi / 180)*100000) / 100000
 
-    def cos(self, x):
-        self.result = math.cos(x * math.pi / 180)
+    def Cos(self, x):
+        return round(math.cos(x * math.pi / 180)*100000) / 100000
 
-    def tg(self, x):
-        self.result = math.tan(x * math.pi / 180)
+    def Tan(self, x):
+        return self.Sin(x) / self.Cos(x)
 
-    def ctg(self, x):
-        self.result = math.cos(x * math.pi / 180) / math.sin(x * math.pi / 180)
+    def Ctg(self, x):
+        return self.Cos(x) / self.Sin(x)
+    
+    def Exp(self, x):
+        return math.exp(x)
 
-    def log(self, x, y):
-        self.result = math.log(x, y)
+    def Log(self, x, y):
+        return math.log(x, y)
+    
+    def Mod(self, x, y):
+        return x % y
 
     def operation(self, operation, x=0, y=0):
         match operation:
             case "+":
-                self.add(x, y)
+                return self.add(x, y)
             case "-":
-                self.subtract(x, y)
+                return self.subtract(x, y)
             case "*":
-                self.multiply(x, y)
+                return self.multiply(x, y)
             case "/":
-                self.divide(x, y)
+                return self.divide(x, y)
             case "^":
-                self.power(x, y)
+                return self.power(x, y)
             case "sqrt":
-                self.sqrt(x)
+                return self.sqrt(x)
             case "!":
-                self.factorial(x)
+                return self.factorial(x)
             case "sin":
-                self.sin(x)
+                return self.Sin(x)
             case "cos":
-                self.cos(x)
-            case "tg":
-                self.tg(x)
+                return self.Cos(x)
+            case "tan":
+                return self.Tan(x)
             case "ctg":
-                self.ctg(x)
-
+                return self.Ctg(x)
+            case "exp":
+                return self.Exp(x)
+            case "log":
+                return self.Log(y, x)
+            case "mod":
+                return self.Mod(x, y)
 
 calc1 = Calculator()
-OperationsOrder = ["sin", "cos", "tg", "ctg", "!", "sqrt", "^", "*", "/", "+", "-"]
-
-print("доступные операции:\nsin\tcos\ttg\tctg\t!\tsqrt\t^\t*\t/\t+\t-")
-while True:
-    expression = input("Введите выражение (операции и операнды отделять пробелом)\n")
-    NumsAndOperations = expression.split()
-    for operation in OperationsOrder:
-        i = 0
-        while i < len(NumsAndOperations):
-            if NumsAndOperations[i] == "exit":
-                exit(0)
-            elif NumsAndOperations[i] == operation:
-                if operation in ["sqrt", "tg", "ctg", "sin", "cos"]:
-                    calc1.operation(operation, float(NumsAndOperations[i + 1]))
-                    NumsAndOperations[i] = calc1.result
-                    del NumsAndOperations[i + 1]
-                elif operation == "!":
-                    try:
-                        calc1.factorial(int(NumsAndOperations[i - 1]))
-                        NumsAndOperations[i] = calc1.result
-                        del NumsAndOperations[i - 1]
-                    except ValueError:
-                        raise ValueError("Факториал определен только для целых положительных чисел")
-                else:
-                    calc1.operation(operation, float(NumsAndOperations[i - 1]), float(NumsAndOperations[i + 1]))
-                    NumsAndOperations[i] = calc1.result
-                    del NumsAndOperations[i + 1]
-                    del NumsAndOperations[i - 1]
-                i = 0
-            else:
-                i += 1
-
-    print(calc1.result)
-    calc1.result = 0
+while 1:
+    expression = input("Введите выражение:\n")
+    calc1.calculate(expression)
