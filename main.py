@@ -2,9 +2,8 @@ import math
 
 class Calculator:
     
-    def tokeniser(self, expression): # "2+3-5"
+    def tokeniser(self, expression): # "cos90+(3-5)" -> ['cos', '90', '+', '(', '3', '-', '5', ')']
         minusflag = 1
-        expression.replace(" ", "")
         expression += ' '
         tokenlist = []
         token = ''
@@ -13,14 +12,10 @@ class Calculator:
             if expression[chr] in ' ,':
                  chr += 1
             elif expression[chr] == '-' and minusflag == 1:
-                token += expression[chr]
-                while expression[chr + 1] in "0123456789.":
-                    token += expression[chr + 1]
-                    chr += 1
-                tokenlist.append(token)
-                token = ''
-                chr += 1
+                tokenlist.append("-1")
+                tokenlist.append("*")
                 minusflag = 0
+                chr += 1
             elif expression[chr] == '(':
                 token = '('
                 tokenlist.append(token)
@@ -41,6 +36,12 @@ class Calculator:
                 tokenlist.append(token)
                 token = ''
                 chr += 1
+                minusflag = 0
+            elif expression[chr] == 'p' and expression[chr + 1] == 'i':
+                token += 'pi'
+                tokenlist.append(token)
+                chr += 2
+                token = ''
                 minusflag = 0
             elif expression[chr] in "sctelm":
                 token = expression[chr] + expression[chr + 1] + expression[chr + 2] + ('t' if expression[chr + 3] == 't' else '')
@@ -82,7 +83,9 @@ class Calculator:
             try:
                 stack_d.append(float(token))
             except ValueError:
-                if token == '(':
+                if token == 'pi':
+                    stack_d.append(math.pi)
+                elif token == '(':
                     stack_c.append(token)
                 elif token == ')':
                     while stack_c[-1] != '(':
